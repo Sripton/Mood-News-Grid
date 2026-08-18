@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { newsData } from "./data/newsData"
-import type { Mood } from "./types/news"
+import { useEffect, useState } from "react";
+import type { Mood, NewsItem, ApiNewsItem } from "./types/news"
 
 function App() {
   // состояние для новостей
@@ -8,6 +7,49 @@ function App() {
 
   // состояние для выбранной новости 
   const [newsId, setNewsId] = useState<string | null>(null);
+
+  // состояние для массива новостей
+  const [news, setNews] = useState<NewsItem[]>([]);
+  // состояние для загрузки 
+  const [isLoading, setIsLoading] = useState(true);
+  // состояние для ошибки
+  const [error, setError] = useState<string | null>(null);
+
+  // загрузка новостей
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        const response = await fetch(`http://localhost:3001/api/news`);
+        if (!response.ok) {
+          throw new Error("Не удалось загрузить новости")
+        }
+        const data: ApiNewsItem[] = await response.json();
+        const apiNews: NewsItem[] = data.map((item) => {
+          return {
+            id: item.id,
+            title: item.title,
+            source: item.source,
+            url: item.url,
+            publishedAt: item.publishedAt,
+            originalText: item.originalText,
+            rewritten: {
+              happy: item.happyText,
+              sad: item.sadText,
+              neutral: item.neutralText,
+              ironic: item.ironicText
+            }
+          }
+        })
+        setNews(apiNews)
+      } catch (error) {
+        setError(error instanceof Error ? error.message : "Неизвестная ошибка")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadNews();
+  }, [])
 
   // подписи
   const moodLabels: Record<Mood, string> = {
@@ -28,45 +70,69 @@ function App() {
   }
 
   // Основная новость
-  const selectedNews = newsData.find((news) => news.id === newsId);
+  const selectedNews = news.find((item) => item.id === newsId);
 
   return (
     <main>
+
+      {/* Основной блок новостей */}
       <h1>Mood News Grid</h1>
-      <div>
+      <div className="mood-controls">
         {(Object.keys(moodLabels) as Mood[]).map((mood) => (
           <button
             key={mood}
-            className={selectedMood === mood ? "active-mood" : ""}
+            className={selectedMood === mood ? "mood-button active-mood" : "mood-button"}
             onClick={() => handlerMoodClick(mood)}>
             {moodLabels[mood]}
           </button>
         ))}
       </div>
-      <section className="news-grid">
-        {newsData.map((news) => (
-          <article
-            key={news.id}
-            className={newsId === news.id ? "active-card " : ""}
-            onClick={() => handleMoodIdClick(news.id)}>
-            <h2>{news.title}</h2>
-            <span>{news.source}</span>
-            <p>{news.rewritten[selectedMood]}</p>
-          </article>
-        ))}
-      </section>
 
-      {selectedNews && (
-        <section>
-          <article>
-            <h2>{selectedNews.title}</h2>
-            <span>{selectedNews.source}</span>
-            <p>{`Исходный текст: ${selectedNews.originalText}`}</p>
-            <p>{`Переписанный текст: ${selectedNews.rewritten[selectedMood]}`}</p>
-            <a href={selectedNews.url} target="_blank" rel="noreferrer">Открыть источник</a>
-          </article>
 
-        </section>
+      {isLoading && (
+        <p>Загружаем новости...</p>
+      )}
+      {error ? (
+        <p>{error}</p>
+      ) : (
+        <>
+
+          <section className="news-grid">
+            {news.map((item) => (
+              <article
+                key={item.id}
+                className={newsId === item.id ? "active-card " : ""}
+                onClick={() => handleMoodIdClick(item.id)}>
+                <h2>{item.title}</h2>
+                <span>{item.source}</span>
+                <p>{item.rewritten[selectedMood]}</p>
+              </article>
+            ))}
+          </section>
+
+
+          {/* Блок выделенной новости  */}
+          {selectedNews && (
+            <section className="selected-news">
+              <article>
+                <h2>{selectedNews.title}</h2>
+                <span>{selectedNews.source}</span>
+                <div className="compare-grid">
+                  <div className="compare-card">
+                    <h3>Исходный текст:</h3>
+                    <p>{`${selectedNews.originalText}`}</p>
+                  </div>
+                  <div className="compare-card">
+                    <h3>Переписанный текст:</h3>
+                    <p>{`${selectedNews.rewritten[selectedMood]}`}</p>
+                  </div>
+                </div>
+
+                <a href={selectedNews.url} target="_blank" rel="noreferrer">Открыть источник</a>
+              </article>
+            </section>
+          )}
+        </>
       )}
     </main>
   )

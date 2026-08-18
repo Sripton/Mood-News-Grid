@@ -8,6 +8,8 @@ const nasa_api_url_page2 =
 const nasa_api_url_page3 =
   "https://www.nasa.gov/wp-json/wp/v2/posts?per_page=10&page=3&_fields=id,date,link,title,excerpt";
 
+type Mood = "happy" | "sad" | "neutral" | "ironic";
+
 // функция очистки HTML тегов
 const cleanHtmlTags = (html: string) => {
   return (
@@ -26,6 +28,20 @@ const cleanHtmlTags = (html: string) => {
       .replace(/\s+/g, " ") // схлопываем множественные пробелы
       .trim()
   );
+};
+
+// функция изменения подачи метариалов под настроение
+const rewriteByMood = (text: string, mood: Mood) => {
+  switch (mood) {
+    case "neutral":
+      return text;
+    case "happy":
+      return `Позитивные новости: ${text}`;
+    case "sad":
+      return `Грустные новости: ${text}`;
+    case "ironic":
+      return `Новости с иронией: ${text}`;
+  }
 };
 
 // функция для получения NASA ответ
@@ -69,10 +85,10 @@ const fetchNasaNews = async () => {
       url: item.link,
       publishedAt: item.date,
       originalText,
-      happyText: originalText,
-      sadText: originalText,
-      neutralText: originalText,
-      ironicText: originalText,
+      happyText: rewriteByMood(originalText, "happy"),
+      sadText: rewriteByMood(originalText, "sad"),
+      neutralText: rewriteByMood(originalText, "neutral"),
+      ironicText: rewriteByMood(originalText, "ironic"),
     };
   });
 };

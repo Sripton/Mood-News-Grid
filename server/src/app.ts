@@ -2,8 +2,8 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
-import NewsModel from "./db/NewsModel";
-import fetchNasaNews from "./services/nasaRssService";
+import NewsModel from "./db/NewsModel.js";
+import fetchNasaNews from "./services/nasaRssService.js";
 dotenv.config();
 const app = express();
 

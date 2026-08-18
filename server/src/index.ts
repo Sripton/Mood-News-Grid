@@ -1,6 +1,6 @@
-import app from "./app";
-import sequelize from "./db/sequelize";
-import NewsModel from "./db/NewsModel";
+import app from "./app.js";
+import sequelize from "./db/sequelize.js";
+import NewsModel from "./db/NewsModel.js";
 const PORT = process.env.PORT;
 
 const start = async () => {

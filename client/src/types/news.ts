@@ -10,3 +10,17 @@ export interface NewsItem {
   originalText: string; // тсходный текст
   rewritten: Record<Mood, string>; // ключи для выборки настроения
 }
+
+// интерфейс для ответа сервера
+export interface ApiNewsItem {
+  id: string;
+  title: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+  originalText: string;
+  happyText: string;
+  sadText: string;
+  neutralText: string;
+  ironicText: string;
+}
